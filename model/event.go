@@ -1,6 +1,6 @@
 package model
 
-type Event struct {
+type EventJson struct {
 	Timestamp           string `json:"@timestamp"`
 	EventName           string `json:"eventName"`
 	EventSourceAddress  string `json:"eventSourceAddress"`
@@ -10,6 +10,7 @@ type Event struct {
 	LocalTransactionId  string `json:"localTransactionId"`
 	ParentTransactionId string `json:"parentTransactionId"`
 	BrokerName          string `json:"brokerName"`
+	HostName          string `json:"brokerName"`
 	ExecutionGroupName  string `json:"executionGroupName"`
 	MessageFlowName     string `json:"messageFlowName"`
 	UniqueFlowName      string `json:"uniqueFlowName"`
