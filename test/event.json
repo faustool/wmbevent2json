@@ -1,0 +1,28 @@
+{
+  "@timestamp": "2001-12-31T12:00:00",
+  "eventName": "Test Event",
+  "eventSourceAddress": "QueueName.terminal.Out",
+  "productVersion": "10.0.0.6",
+  "counter": 1,
+  "globalTransactionId": "123",
+  "localTransactionId": "456",
+  "parentTransactionId": "789",
+  "brokerName": "MYBROKER",
+  "executionGroupName": "MYEG",
+  "messageFlowName": "MyFlowName",
+  "uniqueFlowName": "my.flow.name",
+  "nodeDetail": "QUEUE.NAME",
+  "nodeType": "ComIbmMQInputNode",
+  "nodeLabel": "QueueName",
+  "nodeTerminal": "Out",
+  "simpleContents": {
+    "simple1": "value1",
+    "simple2": "value2"
+  },
+  "complexContents": [
+    "{\n  \"Complex2\": {\n    \"Child1\": {\n      \"attributes\": {\n        \"attr\": \"value\"\n      },\n      \"value\": \"Child value\"\n    }\n  }\n}\n",
+    "{\n  \"Complex2\": {\n    \"Child1\": {\n    }\n  }\n}\n"
+  ],
+  "bitstreamEncoding": "CDATA",
+  "bitstream": "<greeting>Hello, world!</greeting>"
+}
