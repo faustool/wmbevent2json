@@ -19,7 +19,6 @@
     </wmb:eventPointData>
     <wmb:applicationData>
         <wmb:simpleContent wmb:dataType="string" wmb:name="simple1" wmb:targetNamespace="" wmb:value="value1"/>
-        <wmb:simpleContent wmb:dataType="string" wmb:name="simple2" wmb:targetNamespace="" wmb:value="value2"/>
         <wmb:complexContent wmb:elementName="Complex1" wmb:targetNamespace="">
             <Complex1>
                 <Child1 attr="attr-value">
@@ -27,6 +26,7 @@
                 </Child1>
             </Complex1>
         </wmb:complexContent>
+        <wmb:simpleContent wmb:dataType="string" wmb:name="simple2" wmb:targetNamespace="" wmb:value="value2"/>
         <wmb:complexContent wmb:elementName="Complex2" wmb:targetNamespace="">
             <Complex2>
                 <Child1>

@@ -29,32 +29,83 @@ func (trimmer RegExAllStringTrimmer) Trim(value string) string {
 func Transform(wmbEventXML string) ([]byte, error) {
 	d := xml.NewDecoder(strings.NewReader(wmbEventXML))
 
-	buffer := bytes.NewBuffer(make([]byte, 0))
-	stream := jsonenc.NewStream(buffer)
+	eventBuffer := bytes.NewBuffer(make([]byte, 0))
+	eventStream := jsonenc.NewStream(eventBuffer)
+
+	simpleBuffer := bytes.NewBuffer(make([]byte, 0))
+	simpleStream := jsonenc.NewStream(simpleBuffer)
+
+	complexBuffer := bytes.NewBuffer(make([]byte, 0))
+	complexStream := jsonenc.NewStream(complexBuffer)
 
 	trimmer := NewAllStringTrimmer()
 
-	stream.WriteStartObject()
+	currentWmbElementName := ""
+	eventStream.WriteStartObject()
 	for t, tokenErr := d.Token(); tokenErr != io.EOF; t, tokenErr = d.Token() {
 		if tokenErr != nil {
 			return nil, tokenErr
 		}
 		switch t := t.(type) {
 		case xml.StartElement:
-			stream.WriteStartObjectWithName(t.Name.Local)
-			for _, attr := range t.Attr {
-				stream.WriteNameValueString("@" + attr.Name.Local, attr.Value)
+			if t.Name.Space == "http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event" {
+				currentWmbElementName = t.Name.Local
+				if currentWmbElementName == "simpleContent" {
+					simpleStream.WriteStartObject()
+					writeAttributes(t, simpleStream, "")
+					simpleStream.WriteEndObject()
+				} else if currentWmbElementName == "complexContent" {
+					complexStream.WriteStartObject()
+					writeAttributes(t, complexStream, "")
+					complexStream.WriteStartObjectWithName("data")
+				} else {
+					writeAttributes(t, eventStream, currentWmbElementName+ "_")
+				}
+			} else {
+				space := "{" + t.Name.Space + "}"
+				name := space + "#" + t.Name.Local
+				complexStream.WriteStartObjectWithName(name)
+				writeAttributes(t, complexStream, "@")
 			}
 		case xml.EndElement:
-			stream.WriteEndObject()
+			if currentWmbElementName == "complexContent" {
+				complexStream.WriteEndObject()
+				if t.Name.Space == "http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event" {
+					// closing the "data" object
+					complexStream.WriteEndObject()
+					// cleanup the variable to avoid multiple closes
+					currentWmbElementName = ""
+				}
+			}
 		case xml.CharData:
 			value := trimmer.Trim(string(t))
 			if value != "" {
-				stream.WriteNameValueString("#value", value)
+				if currentWmbElementName == "complexContent" {
+					complexStream.WriteNameValueString("#text", value)
+				} else {
+					eventStream.WriteNameValueString(currentWmbElementName, value)
+				}
 			}
 		}
 	}
-	stream.WriteEndObject()
 
-	return buffer.Bytes(), nil
+	eventStream.WriteStartArrayWithName("simpleContents")
+	eventStream.WriteLiteralValue(string(simpleBuffer.Bytes()))
+	eventStream.WriteEndArray()
+
+	eventStream.WriteStartArrayWithName("complexContents")
+	eventStream.WriteLiteralValue(string(complexBuffer.Bytes()))
+	eventStream.WriteEndArray()
+
+	eventStream.WriteEndObject()
+
+	return eventBuffer.Bytes(), nil
+}
+
+func writeAttributes(t xml.StartElement, currentStream *jsonenc.Stream, prefix string) {
+	for _, attr := range t.Attr {
+		if attr.Value != "" {
+			currentStream.WriteNameValueString(prefix+attr.Name.Local, attr.Value)
+		}
+	}
 }

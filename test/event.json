@@ -1,28 +1,57 @@
 {
-  "@timestamp": "2001-12-31T12:00:00",
-  "eventName": "Test Event",
-  "eventSourceAddress": "QueueName.terminal.Out",
-  "productVersion": "10.0.0.6",
-  "counter": 1,
-  "globalTransactionId": "123",
-  "localTransactionId": "456",
-  "parentTransactionId": "789",
-  "brokerName": "MYBROKER",
-  "executionGroupName": "MYEG",
-  "messageFlowName": "MyFlowName",
-  "uniqueFlowName": "my.flow.name",
-  "nodeDetail": "QUEUE.NAME",
-  "nodeType": "ComIbmMQInputNode",
-  "nodeLabel": "QueueName",
-  "nodeTerminal": "Out",
-  "simpleContents": {
-    "simple1": "value1",
-    "simple2": "value2"
-  },
-  "complexContents": [
-    "{\n  \"Complex2\": {\n    \"Child1\": {\n      \"attributes\": {\n        \"attr\": \"value\"\n      },\n      \"value\": \"Child value\"\n    }\n  }\n}\n",
-    "{\n  \"Complex2\": {\n    \"Child1\": {\n    }\n  }\n}\n"
+  "event_wmb":"http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event",
+  "eventData_eventSourceAddress":"QueueName.terminal.Out",
+  "eventData_productVersion":"10.0.0.6",
+  "eventIdentity_eventName":"Test Event",
+  "eventSequence_counter":"1",
+  "eventSequence_creationTime":"2001-12-31T12:00:00",
+  "eventSequence_dataType":"dateTime",
+  "eventCorrelation_globalTransactionId":"123",
+  "eventCorrelation_localTransactionId":"456",
+  "eventCorrelation_parentTransactionId":"789",
+  "broker_name":"MYBROKER",
+  "executionGroup_name":"MYEG",
+  "messageFlow_name":"MyFlowName",
+  "messageFlow_uniqueFlowName":"my.flow.name",
+  "node_detail":"QUEUE.NAME",
+  "node_nodeLabel":"QueueName",
+  "node_nodeType":"ComIbmMQInputNode",
+  "node_terminal":"Out",
+  "bitstream_encoding":"CDATA",
+  "bitstream":"<greeting>Hello,world!</greeting>",
+  "simpleContents":[
+    {
+      "dataType":"string",
+      "name":"simple1",
+      "value":"value1"
+    },
+    {
+      "dataType":"string",
+      "name":"simple2",
+      "value":"value2"
+    }
   ],
-  "bitstreamEncoding": "CDATA",
-  "bitstream": "<greeting>Hello, world!</greeting>"
+  "complexContents":[
+    {
+      "elementName":"Complex1",
+      "data":{
+        "{}#Complex1":{
+          "{}#Child1":{
+            "@attr":"attr-value",
+            "#text":"Childvalue"
+          }
+        }
+      }
+    },
+    {
+      "elementName":"Complex2",
+      "data":{
+        "{}#Complex2":{
+          "{}#Child1":{
+
+          }
+        }
+      }
+    }
+  ]
 }
