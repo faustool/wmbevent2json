@@ -3,7 +3,7 @@ Go library to transform IBM WebSphere Message Broker/IntegrationBus monitoring X
 The reason behind this project is to support the creation of an Elastic beat
 
 ##Example
-The following XML:
+The following wmb:event XML usually published by IBM Integration Bus:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <wmb:event xmlns:wmb="http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event">
@@ -47,7 +47,7 @@ The following XML:
 </wmb:event>
 ```
 
-Generates the Json below:
+Generates the Json below to be sent out to an Elasticsearch instance:
 ```json
 {
   "event_wmb":"http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event",
