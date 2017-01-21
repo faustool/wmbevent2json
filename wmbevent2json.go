@@ -19,7 +19,7 @@ func Transform(wmbEventXML string) (model.EventJson, error) {
 		switch t := t.(type) {
 		case xml.StartElement:
 			v, err := mapperStack.Peek()
-			if (err != nil && v.(Element).isComplexContent()) {
+			if err != nil && v.(Element).isComplexContent() {
 
 			} else {
 				element := Element{Name: t.Name, Attr: t.Attr}
@@ -27,13 +27,13 @@ func Transform(wmbEventXML string) (model.EventJson, error) {
 			}
 		case xml.EndElement:
 			v, err := mapperStack.Pop()
-			if (err != nil) {
+			if err != nil {
 				mapper := v.(Element).getMapper()
 				mapper.doMap(&event)
 			}
 		case xml.CharData:
 			v, err := mapperStack.Peek()
-			if (err != nil) {
+			if err != nil {
 				v.(Element).CharData = t
 			}
 		}

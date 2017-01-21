@@ -13,24 +13,24 @@ import
 
 func TestTransform(t *testing.T) {
 	wmbEventXMLFile, err := GetFile("test/WMBEvent.xml")
-	if (err != nil) {
+	if err != nil {
 		t.Fatal(err)
 	}
 	expectedFile, err := GetFile("test/event.json")
-	if (err != nil) {
+	if err != nil {
 		t.Fatal(err)
 	}
 	wmbEventXML, err := ioutil.ReadFile(wmbEventXMLFile)
-	if (err != nil) {
+	if err != nil {
 		t.Fatal(err)
 	}
 	expectedBytes, err := ioutil.ReadFile(expectedFile)
-	if (err != nil) {
+	if err != nil {
 		t.Fatal(err)
 	}
 	expected := model.EventJson{}
 	err = json.Unmarshal(expectedBytes, &expected)
-	if (err != nil) {
+	if err != nil {
 		t.Fatal(err)
 	}
 	actual, err := Transform(string(wmbEventXML))
@@ -38,14 +38,14 @@ func TestTransform(t *testing.T) {
 }
 
 func GetFile(filePath string) (string, error) {
-	files, err := filepath.Glob(filePath);
-	if (err != nil) {
+	files, err := filepath.Glob(filePath)
+	if err != nil {
 		return "", err
 	} else {
 		numberOfFiles := len(files)
-		if (numberOfFiles == 0) {
+		if numberOfFiles == 0 {
 			return "", fmt.Errorf("%s not found", filePath)
-		} else if (numberOfFiles > 1) {
+		} else if numberOfFiles > 1 {
 			return "", fmt.Errorf("More than one %s was found, which is awkward", filePath)
 		}
 	}
