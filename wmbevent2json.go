@@ -9,23 +9,30 @@ import (
 	"regexp"
 )
 
+// String trimmer
 type AllStringTrimmer interface {
+	// Trims all spaces of a String, left and right, including \t and \t characters
 	Trim(value string) string
 }
 
+// Implementation of AllStringTrimmer using regular expressions
 type RegExAllStringTrimmer struct {
 	trimmerRegEx *regexp.Regexp
 }
 
+// Creates a new Trimmer using regular expressions as underlying implementation
+// The current regex in use to match unwanted spaces is [\\n\\t ]
 func NewAllStringTrimmer() AllStringTrimmer {
 	trimmerRegEx, _ := regexp.Compile("[\\n\\t ]")
 	return RegExAllStringTrimmer{trimmerRegEx}
 }
 
+// Uses regular expression to trim spaces
 func (trimmer RegExAllStringTrimmer) Trim(value string) string {
 	return trimmer.trimmerRegEx.ReplaceAllString(value, "")
 }
 
+// Transforms a WMBEvent XML string into a Json object
 func Transform(wmbEventXML string) ([]byte, error) {
 	d := xml.NewDecoder(strings.NewReader(wmbEventXML))
 
@@ -102,6 +109,11 @@ func Transform(wmbEventXML string) ([]byte, error) {
 	return eventBuffer.Bytes(), nil
 }
 
+// Write all XML attributes of a given element to a jsonenc.Stream with an optional prefix
+//
+// The first argument is the XML object that contains the element name. Only the local name will be used.
+// The second argument is the jsonenc.Stream where the attributes will be written to
+// The last argument is a prefix that can be added to the Json attribute name, e.g. an @ sign.
 func writeAttributes(t xml.StartElement, currentStream *jsonenc.Stream, prefix string) {
 	for _, attr := range t.Attr {
 		if attr.Value != "" {
