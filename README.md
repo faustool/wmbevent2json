@@ -70,7 +70,7 @@ Generates the Json below to be sent out to an Elasticsearch instance:
   "node_terminal":"Out",
   "bitstream_encoding":"CDATA",
   "bitstream":"<greeting>Hello,world!</greeting>",
-  "simpleContents":[
+  "simpleContent":[
     {
       "dataType":"string",
       "name":"simple1",
@@ -82,12 +82,12 @@ Generates the Json below to be sent out to an Elasticsearch instance:
       "value":"value2"
     }
   ],
-  "complexContents":[
+  "complexContent":[
     {
       "elementName":"Complex1",
       "data":{
-        "{}#Complex1":{
-          "{}#Child1":{
+        "{}:Complex1":{
+          "{}:Child1":{
             "@attr":"attr-value",
             "#text":"Childvalue"
           }
@@ -97,8 +97,8 @@ Generates the Json below to be sent out to an Elasticsearch instance:
     {
       "elementName":"Complex2",
       "data":{
-        "{}#Complex2":{
-          "{}#Child1":{
+        "{}:Complex2":{
+          "{}:Child1":{
 
           }
         }
