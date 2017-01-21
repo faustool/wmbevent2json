@@ -14,15 +14,15 @@ type Mapper interface {
 }
 
 type Element struct {
-	Name      xml.Name
-	Attr      []xml.Attr
-	CharData  xml.CharData
-	Encoder   json.Encoder
+	Name     xml.Name
+	Attr     []xml.Attr
+	CharData xml.CharData
+	Encoder  json.Encoder
 }
 
 func (element Element) getAttribute(name string) string {
 	for _, v := range element.Attr {
-		if (v.Name == name) {
+		if (v.Name.Local == name) {
 			return v.Value
 		}
 	}
@@ -34,7 +34,6 @@ func (element Element) isComplexContent() bool {
 }
 
 type Ignored struct {
-
 }
 
 func (mapper Ignored) doMap(event *model.EventJson) {
@@ -143,7 +142,7 @@ type Bitstream struct {
 
 func (mapper Bitstream) doMap(event *model.EventJson) {
 	event.BitstreamEncoding = mapper.Element.getAttribute("encoding")
-	event.Bitstream = mapper.Element.CharData
+	event.Bitstream = string(mapper.Element.CharData)
 }
 
 type ComplexContent struct {
@@ -151,23 +150,34 @@ type ComplexContent struct {
 }
 
 func (mapper ComplexContent) doMap(event *model.EventJson) {
-	append(event.ComplexContents, mapper.Element.CharData)
+	event.ComplexContents = append(event.ComplexContents, string(mapper.Element.CharData))
 }
 
 func (element Element) getMapper() Mapper {
 	if (element.Name.Space == wmbns) {
 		switch element.Name.Local {
-		case "eventData": return EventData{element}
-		case "eventIdentity": return EventIdentity{element}
-		case "eventSequence": return EventSequence{element}
-		case "eventCorrelation": return EventCorrelation{element}
-		case "broker": return Broker{element}
-		case "executionGroup": return ExecutionGroup{element}
-		case "messageFlow": return MessageFlow{element}
-		case "node": return Node{element}
-		case "simpleContent": return SimpleContent{element}
-		case "bitstream": return Bitstream{element}
-		case "complexContent": return ComplexContent{element}
+		case "eventData":
+			return EventData{element}
+		case "eventIdentity":
+			return EventIdentity{element}
+		case "eventSequence":
+			return EventSequence{element}
+		case "eventCorrelation":
+			return EventCorrelation{element}
+		case "broker":
+			return Broker{element}
+		case "executionGroup":
+			return ExecutionGroup{element}
+		case "messageFlow":
+			return MessageFlow{element}
+		case "node":
+			return Node{element}
+		case "simpleContent":
+			return SimpleContent{element}
+		case "bitstream":
+			return Bitstream{element}
+		case "complexContent":
+			return ComplexContent{element}
 		}
 		return Ignored{}
 	} else {

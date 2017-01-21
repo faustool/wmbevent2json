@@ -3,8 +3,6 @@ package wmbevent2json
 import (
 	"github.com/fausto/wmbevent2json/model"
 	"github.com/fausto/stack"
-	//"encoding/xml"
-	//"strings"
 	"encoding/xml"
 	"strings"
 )
@@ -20,7 +18,7 @@ func Transform(wmbEventXML string) (model.EventJson, error) {
 		}
 		switch t := t.(type) {
 		case xml.StartElement:
-			v, err := mapperStack.Peak()
+			v, err := mapperStack.Peek()
 			if (err != nil && v.(Element).isComplexContent()) {
 
 			} else {
@@ -31,10 +29,10 @@ func Transform(wmbEventXML string) (model.EventJson, error) {
 			v, err := mapperStack.Pop()
 			if (err != nil) {
 				mapper := v.(Element).getMapper()
-				mapper.doMap(event)
+				mapper.doMap(&event)
 			}
 		case xml.CharData:
-			v, err := mapperStack.Peak()
+			v, err := mapperStack.Peek()
 			if (err != nil) {
 				v.(Element).CharData = t
 			}
