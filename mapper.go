@@ -22,7 +22,7 @@ type Element struct {
 
 func (element Element) getAttribute(name string) string {
 	for _, v := range element.Attr {
-		if (v.Name.Local == name) {
+		if v.Name.Local == name {
 			return v.Value
 		}
 	}
@@ -72,7 +72,7 @@ type EventSequence struct {
 func (mapper EventSequence) doMap(event *model.EventJson) {
 	counter := mapper.Element.getAttribute("counter")
 	i, err := strconv.Atoi(counter)
-	if (err == nil) {
+	if err == nil {
 		event.Counter = 0
 	} else {
 		event.Counter = i
@@ -154,7 +154,7 @@ func (mapper ComplexContent) doMap(event *model.EventJson) {
 }
 
 func (element Element) getMapper() Mapper {
-	if (element.Name.Space == wmbns) {
+	if element.Name.Space == wmbns {
 		switch element.Name.Local {
 		case "eventData":
 			return EventData{element}

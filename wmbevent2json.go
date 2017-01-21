@@ -1,43 +1,60 @@
 package wmbevent2json
 
 import (
-	"github.com/fausto/wmbevent2json/model"
-	"github.com/fausto/stack"
 	"encoding/xml"
+	"bytes"
+	"github.com/fausto/jsonenc"
 	"strings"
+	"io"
+	"regexp"
 )
 
-func Transform(wmbEventXML string) (model.EventJson, error) {
-	mapperStack := stack.ArrayStack{make([]interface{}, 0)}
+type AllStringTrimmer interface {
+	Trim(value string) string
+}
+
+type RegExAllStringTrimmer struct {
+	trimmerRegEx *regexp.Regexp
+}
+
+func NewAllStringTrimmer() AllStringTrimmer {
+	trimmerRegEx, _ := regexp.Compile("[\\n\\t ]")
+	return RegExAllStringTrimmer{trimmerRegEx}
+}
+
+func (trimmer RegExAllStringTrimmer) Trim(value string) string {
+	return trimmer.trimmerRegEx.ReplaceAllString(value, "")
+}
+
+func Transform(wmbEventXML string) ([]byte, error) {
 	d := xml.NewDecoder(strings.NewReader(wmbEventXML))
-	event := model.EventJson{}
-	for {
-		t, tokenErr := d.Token()
+
+	buffer := bytes.NewBuffer(make([]byte, 0))
+	stream := jsonenc.NewStream(buffer)
+
+	trimmer := NewAllStringTrimmer()
+
+	stream.WriteStartObject()
+	for t, tokenErr := d.Token(); tokenErr != io.EOF; t, tokenErr = d.Token() {
 		if tokenErr != nil {
 			return nil, tokenErr
 		}
 		switch t := t.(type) {
 		case xml.StartElement:
-			v, err := mapperStack.Peek()
-			if err != nil && v.(Element).isComplexContent() {
-
-			} else {
-				element := Element{Name: t.Name, Attr: t.Attr}
-				mapperStack.Push(element)
+			stream.WriteStartObjectWithName(t.Name.Local)
+			for _, attr := range t.Attr {
+				stream.WriteNameValueString("@" + attr.Name.Local, attr.Value)
 			}
 		case xml.EndElement:
-			v, err := mapperStack.Pop()
-			if err != nil {
-				mapper := v.(Element).getMapper()
-				mapper.doMap(&event)
-			}
+			stream.WriteEndObject()
 		case xml.CharData:
-			v, err := mapperStack.Peek()
-			if err != nil {
-				v.(Element).CharData = t
+			value := trimmer.Trim(string(t))
+			if value != "" {
+				stream.WriteNameValueString("#value", value)
 			}
 		}
 	}
+	stream.WriteEndObject()
 
-	return model.EventJson{}, nil
+	return buffer.Bytes(), nil
 }

@@ -7,8 +7,6 @@ import
 	"path/filepath"
 	"io/ioutil"
 	"github.com/stretchr/testify/assert"
-	"encoding/json"
-	"github.com/fausto/wmbevent2json/model"
 )
 
 func TestTransform(t *testing.T) {
@@ -16,25 +14,34 @@ func TestTransform(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedFile, err := GetFile("test/event.json")
-	if err != nil {
-		t.Fatal(err)
-	}
 	wmbEventXML, err := ioutil.ReadFile(wmbEventXMLFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBytes, err := ioutil.ReadFile(expectedFile)
+	//expectedFile, err := GetFile("test/event.json")
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//expectedBytes, err := ioutil.ReadFile(expectedFile)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//expected := model.EventJson{}
+	//err = json.Unmarshal(expectedBytes, &expected)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+
+	xmlString := string(wmbEventXML)
+	actualBytes, err := Transform(xmlString)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := model.EventJson{}
-	err = json.Unmarshal(expectedBytes, &expected)
-	if err != nil {
-		t.Fatal(err)
-	}
-	actual, err := Transform(string(wmbEventXML))
-	assert.Equal(t, expected, actual, "Unexpected events")
+
+	fmt.Println(string(actualBytes))
+	assert.Fail(t,"Not yet completed!")
+
+	//assert.Equal(t, expectedBytes, actualBytes, "Unexpected events")
 }
 
 func GetFile(filePath string) (string, error) {
