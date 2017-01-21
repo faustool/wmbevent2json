@@ -9,6 +9,16 @@ import (
 	"regexp"
 )
 
+const WMB_XML_NS = "http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event"
+const SIMPLE_CONTENT = "simpleContent"
+const COMPLEX_CONTENT = "complexContent"
+const DATA_ELEMENT = "data"
+const ATTRIBUTE_SEPARATOR = "_"
+const TEXT_VALUE_PREFIX = "#text"
+const ATTRIBUTE_NAME_PREFIX = "@"
+
+var trimmer = NewAllStringTrimmer()
+
 // String trimmer
 type AllStringTrimmer interface {
 	// Trims all spaces of a String, left and right, including \t and \t characters
@@ -32,81 +42,124 @@ func (trimmer RegExAllStringTrimmer) Trim(value string) string {
 	return trimmer.trimmerRegEx.ReplaceAllString(value, "")
 }
 
+type bufferedJsonStream struct {
+	buffer *bytes.Buffer
+	stream *jsonenc.Stream
+}
+
+func newBufferedJsonStream() *bufferedJsonStream {
+	bufferedJsonStream := bufferedJsonStream{}
+	bufferedJsonStream.buffer = newEmptyBuffer()
+	bufferedJsonStream.stream = jsonenc.NewStream(bufferedJsonStream.buffer)
+	return &bufferedJsonStream
+}
+
+type jsonStreams struct{
+	event *bufferedJsonStream
+	simple *bufferedJsonStream
+	complex *bufferedJsonStream
+}
+
 // Transforms a WMBEvent XML string into a Json object
-func Transform(wmbEventXML string) ([]byte, error) {
+func TransformWMBEventXMLToJson(wmbEventXML string) ([]byte, error) {
 	d := xml.NewDecoder(strings.NewReader(wmbEventXML))
 
-	eventBuffer := bytes.NewBuffer(make([]byte, 0))
-	eventStream := jsonenc.NewStream(eventBuffer)
-
-	simpleBuffer := bytes.NewBuffer(make([]byte, 0))
-	simpleStream := jsonenc.NewStream(simpleBuffer)
-
-	complexBuffer := bytes.NewBuffer(make([]byte, 0))
-	complexStream := jsonenc.NewStream(complexBuffer)
-
-	trimmer := NewAllStringTrimmer()
+	json := jsonStreams{
+		event:newBufferedJsonStream(),
+		simple:newBufferedJsonStream(),
+		complex:newBufferedJsonStream(),
+	}
 
 	currentWmbElementName := ""
-	eventStream.WriteStartObject()
+	json.event.stream.WriteStartObject()
 	for t, tokenErr := d.Token(); tokenErr != io.EOF; t, tokenErr = d.Token() {
 		if tokenErr != nil {
 			return nil, tokenErr
 		}
 		switch t := t.(type) {
 		case xml.StartElement:
-			if t.Name.Space == "http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event" {
-				currentWmbElementName = t.Name.Local
-				if currentWmbElementName == "simpleContent" {
-					simpleStream.WriteStartObject()
-					writeAttributes(t, simpleStream, "")
-					simpleStream.WriteEndObject()
-				} else if currentWmbElementName == "complexContent" {
-					complexStream.WriteStartObject()
-					writeAttributes(t, complexStream, "")
-					complexStream.WriteStartObjectWithName("data")
-				} else {
-					writeAttributes(t, eventStream, currentWmbElementName+ "_")
-				}
-			} else {
-				space := "{" + t.Name.Space + "}"
-				name := space + "#" + t.Name.Local
-				complexStream.WriteStartObjectWithName(name)
-				writeAttributes(t, complexStream, "@")
-			}
+			currentWmbElementName = handleStartElement(t, currentWmbElementName, &json)
 		case xml.EndElement:
-			if currentWmbElementName == "complexContent" {
-				complexStream.WriteEndObject()
-				if t.Name.Space == "http://www.ibm.com/xmlns/prod/websphere/messagebroker/6.1.0/monitoring/event" {
-					// closing the "data" object
-					complexStream.WriteEndObject()
-					// cleanup the variable to avoid multiple closes
-					currentWmbElementName = ""
-				}
-			}
+			currentWmbElementName = handleEndElement(currentWmbElementName, &json, t)
 		case xml.CharData:
-			value := trimmer.Trim(string(t))
-			if value != "" {
-				if currentWmbElementName == "complexContent" {
-					complexStream.WriteNameValueString("#text", value)
-				} else {
-					eventStream.WriteNameValueString(currentWmbElementName, value)
-				}
-			}
+			handleElementValue(t, currentWmbElementName, &json)
 		}
 	}
 
-	eventStream.WriteStartArrayWithName("simpleContents")
-	eventStream.WriteLiteralValue(string(simpleBuffer.Bytes()))
-	eventStream.WriteEndArray()
+	addSimpleContent(&json)
+	addComplexContent(&json)
 
-	eventStream.WriteStartArrayWithName("complexContents")
-	eventStream.WriteLiteralValue(string(complexBuffer.Bytes()))
-	eventStream.WriteEndArray()
+	json.event.stream.WriteEndObject()
 
-	eventStream.WriteEndObject()
+	return json.event.buffer.Bytes(), nil
+}
 
-	return eventBuffer.Bytes(), nil
+func addComplexContent(json *jsonStreams) {
+	json.event.stream.WriteStartArrayWithName(COMPLEX_CONTENT)
+	json.event.stream.WriteLiteralValue(string(json.complex.buffer.Bytes()))
+	json.event.stream.WriteEndArray()
+}
+
+func addSimpleContent(json *jsonStreams) {
+	json.event.stream.WriteStartArrayWithName(SIMPLE_CONTENT)
+	json.event.stream.WriteLiteralValue(string(json.simple.buffer.Bytes()))
+	json.event.stream.WriteEndArray()
+}
+
+func handleElementValue(t xml.CharData, currentWmbElementName string, json *jsonStreams) {
+	value := trimmer.Trim(string(t))
+	if value != "" {
+		if currentWmbElementName == COMPLEX_CONTENT {
+			json.complex.stream.WriteNameValueString(TEXT_VALUE_PREFIX, value)
+		} else {
+			json.event.stream.WriteNameValueString(currentWmbElementName, value)
+		}
+	}
+}
+
+func handleEndElement(currentWmbElementName string, json *jsonStreams, t xml.EndElement) string {
+	if currentWmbElementName == COMPLEX_CONTENT {
+		json.complex.stream.WriteEndObject()
+		if t.Name.Space == WMB_XML_NS {
+			// closing the "data" object
+			json.complex.stream.WriteEndObject()
+			// cleanup the variable to avoid multiple closes
+			currentWmbElementName = ""
+		}
+	}
+	return currentWmbElementName
+}
+func newEmptyBuffer() *bytes.Buffer {
+	return bytes.NewBuffer(make([]byte, 0))
+}
+func handleStartElement(t xml.StartElement, currentWmbElementName string, json *jsonStreams) string {
+	if t.Name.Space == WMB_XML_NS {
+		currentWmbElementName = t.Name.Local
+		switch currentWmbElementName {
+		case SIMPLE_CONTENT:
+			json.simple.stream.WriteStartObject()
+			writeAttributes(t, json.simple.stream, "")
+			json.simple.stream.WriteEndObject()
+		case COMPLEX_CONTENT:
+			json.complex.stream.WriteStartObject()
+			writeAttributes(t, json.complex.stream, "")
+			json.complex.stream.WriteStartObjectWithName(DATA_ELEMENT)
+		default:
+			writeAttributes(t, json.event.stream, currentWmbElementName+ATTRIBUTE_SEPARATOR)
+		}
+	} else {
+		name := createNamespaceQualifiedString(t)
+		json.complex.stream.WriteStartObjectWithName(name)
+		writeAttributes(t, json.complex.stream, ATTRIBUTE_NAME_PREFIX)
+	}
+	return currentWmbElementName
+}
+
+// Creates a string in the form of {namespace}:local
+func createNamespaceQualifiedString(t xml.StartElement) (string) {
+	space := "{" + t.Name.Space + "}"
+	name := space + ":" + t.Name.Local
+	return name
 }
 
 // Write all XML attributes of a given element to a jsonenc.Stream with an optional prefix

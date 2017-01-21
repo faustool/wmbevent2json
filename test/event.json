@@ -19,7 +19,7 @@
   "node_terminal":"Out",
   "bitstream_encoding":"CDATA",
   "bitstream":"<greeting>Hello,world!</greeting>",
-  "simpleContents":[
+  "simpleContent":[
     {
       "dataType":"string",
       "name":"simple1",
@@ -31,12 +31,12 @@
       "value":"value2"
     }
   ],
-  "complexContents":[
+  "complexContent":[
     {
       "elementName":"Complex1",
       "data":{
-        "{}#Complex1":{
-          "{}#Child1":{
+        "{}:Complex1":{
+          "{}:Child1":{
             "@attr":"attr-value",
             "#text":"Childvalue"
           }
@@ -46,8 +46,8 @@
     {
       "elementName":"Complex2",
       "data":{
-        "{}#Complex2":{
-          "{}#Child1":{
+        "{}:Complex2":{
+          "{}:Child1":{
 
           }
         }

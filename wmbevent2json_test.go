@@ -34,10 +34,12 @@ func TestTransform(t *testing.T) {
 	}
 
 	xmlString := string(wmbEventXML)
-	actualBytes, err := Transform(xmlString)
+	actualBytes, err := TransformWMBEventXMLToJson(xmlString)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	println(string(actualBytes))
 
 	var actual map[string]interface{}
 	err = json.Unmarshal(actualBytes, &actual)
