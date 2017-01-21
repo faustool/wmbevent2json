@@ -42,11 +42,13 @@ func (trimmer RegExAllStringTrimmer) Trim(value string) string {
 	return trimmer.trimmerRegEx.ReplaceAllString(value, "")
 }
 
+// A data structure that holds a Json Stream and the buffer used in it
 type bufferedJsonStream struct {
 	buffer *bytes.Buffer
 	stream *jsonenc.Stream
 }
 
+// Initializes a bufferedJsonStream
 func newBufferedJsonStream() *bufferedJsonStream {
 	bufferedJsonStream := bufferedJsonStream{}
 	bufferedJsonStream.buffer = newEmptyBuffer()
@@ -54,6 +56,13 @@ func newBufferedJsonStream() *bufferedJsonStream {
 	return &bufferedJsonStream
 }
 
+// Creates a new empty buffer
+func newEmptyBuffer() *bytes.Buffer {
+	return bytes.NewBuffer(make([]byte, 0))
+}
+
+// A data structure that holds separate Json Streams for the whole event Json object and for simple and complex
+// streams so they can be built separately
 type jsonStreams struct{
 	event *bufferedJsonStream
 	simple *bufferedJsonStream
@@ -94,18 +103,21 @@ func TransformWMBEventXMLToJson(wmbEventXML string) ([]byte, error) {
 	return json.event.buffer.Bytes(), nil
 }
 
+// Add the value of complex Json Stream to the event Json stream as a Json array of objects
 func addComplexContent(json *jsonStreams) {
 	json.event.stream.WriteStartArrayWithName(COMPLEX_CONTENT)
 	json.event.stream.WriteLiteralValue(string(json.complex.buffer.Bytes()))
 	json.event.stream.WriteEndArray()
 }
 
+// Add the value of simple Json Stream to the event Json stream as a Json array of objects
 func addSimpleContent(json *jsonStreams) {
 	json.event.stream.WriteStartArrayWithName(SIMPLE_CONTENT)
 	json.event.stream.WriteLiteralValue(string(json.simple.buffer.Bytes()))
 	json.event.stream.WriteEndArray()
 }
 
+// Captures the XML element value and appends either to the complex or event stream
 func handleElementValue(t xml.CharData, currentWmbElementName string, json *jsonStreams) {
 	value := trimmer.Trim(string(t))
 	if value != "" {
@@ -117,6 +129,8 @@ func handleElementValue(t xml.CharData, currentWmbElementName string, json *json
 	}
 }
 
+// Closes the current object on the complex stream and resets the currentWmbElement name (returned)
+// when it is finished
 func handleEndElement(currentWmbElementName string, json *jsonStreams, t xml.EndElement) string {
 	if currentWmbElementName == COMPLEX_CONTENT {
 		json.complex.stream.WriteEndObject()
@@ -129,9 +143,8 @@ func handleEndElement(currentWmbElementName string, json *jsonStreams, t xml.End
 	}
 	return currentWmbElementName
 }
-func newEmptyBuffer() *bytes.Buffer {
-	return bytes.NewBuffer(make([]byte, 0))
-}
+
+// Append attributes to the correct stream and sets the currentWmbElementName (returned) to the appropriate value
 func handleStartElement(t xml.StartElement, currentWmbElementName string, json *jsonStreams) string {
 	if t.Name.Space == WMB_XML_NS {
 		currentWmbElementName = t.Name.Local
