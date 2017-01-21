@@ -21,9 +21,9 @@ type RegExAllStringTrimmer struct {
 }
 
 // Creates a new Trimmer using regular expressions as underlying implementation
-// The current regex in use to match unwanted spaces is [\\n\\t ]
+// The current regex in use to match unwanted spaces is [\\n\\t\\r ]
 func NewAllStringTrimmer() AllStringTrimmer {
-	trimmerRegEx, _ := regexp.Compile("[\\n\\t ]")
+	trimmerRegEx, _ := regexp.Compile("[\\n\\t\\r ]")
 	return RegExAllStringTrimmer{trimmerRegEx}
 }
 
