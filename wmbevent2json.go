@@ -3,7 +3,7 @@ package wmbevent2json
 import (
 	"encoding/xml"
 	"bytes"
-	"github.com/fausto/jsonenc"
+	"github.com/fausto/jsonstream"
 	"strings"
 	"io"
 	"regexp"
@@ -45,14 +45,14 @@ func (trimmer RegExAllStringTrimmer) Trim(value string) string {
 // A data structure that holds a Json Stream and the buffer used in it
 type bufferedJsonStream struct {
 	buffer *bytes.Buffer
-	stream jsonenc.JsonStream
+	stream jsonstream.JsonStream
 }
 
 // Initializes a bufferedJsonStream
 func newBufferedJsonStream() bufferedJsonStream {
 	bufferedJsonStream := bufferedJsonStream{}
 	bufferedJsonStream.buffer = newEmptyBuffer()
-	bufferedJsonStream.stream = jsonenc.NewJsonStream(bufferedJsonStream.buffer)
+	bufferedJsonStream.stream = jsonstream.NewJsonStream(bufferedJsonStream.buffer)
 	return bufferedJsonStream
 }
 
@@ -175,12 +175,12 @@ func createNamespaceQualifiedString(t xml.StartElement) (string) {
 	return name
 }
 
-// Write all XML attributes of a given element to a jsonenc.JsonStream with an optional prefix
+// Write all XML attributes of a given element to a jsonstream.JsonStream with an optional prefix
 //
 // The first argument is the XML object that contains the element name. Only the local name will be used.
-// The second argument is the jsonenc.JsonStream where the attributes will be written to
+// The second argument is the jsonstream.JsonStream where the attributes will be written to
 // The last argument is a prefix that can be added to the Json attribute name, e.g. an @ sign.
-func writeAttributes(t xml.StartElement, currentStream jsonenc.JsonStream, prefix string) {
+func writeAttributes(t xml.StartElement, currentStream jsonstream.JsonStream, prefix string) {
 	for _, attr := range t.Attr {
 		if attr.Value != "" {
 			currentStream.WriteNameValueString(prefix+attr.Name.Local, attr.Value)
