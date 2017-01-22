@@ -49,11 +49,11 @@ type bufferedJsonStream struct {
 }
 
 // Initializes a bufferedJsonStream
-func newBufferedJsonStream() *bufferedJsonStream {
+func newBufferedJsonStream() bufferedJsonStream {
 	bufferedJsonStream := bufferedJsonStream{}
 	bufferedJsonStream.buffer = newEmptyBuffer()
 	bufferedJsonStream.stream = jsonenc.NewJsonStream(bufferedJsonStream.buffer)
-	return &bufferedJsonStream
+	return bufferedJsonStream
 }
 
 // Creates a new empty buffer
@@ -64,9 +64,9 @@ func newEmptyBuffer() *bytes.Buffer {
 // A data structure that holds separate Json Streams for the whole event Json object and for simple and complex
 // streams so they can be built separately
 type jsonStreams struct{
-	event *bufferedJsonStream
-	simple *bufferedJsonStream
-	complex *bufferedJsonStream
+	event bufferedJsonStream
+	simple bufferedJsonStream
+	complex bufferedJsonStream
 }
 
 // Transforms a WMBEvent XML string into a Json object
